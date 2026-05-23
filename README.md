@@ -2,6 +2,14 @@
 
 Una API REST abierta y colaborativa que proporciona información geográfica detallada de Venezuela.
 
+🌐 **Documentación en vivo:** [https://venezuela-api-two.vercel.app](https://venezuela-api-two.vercel.app)
+
+[![Live](https://img.shields.io/badge/🟢%20API-En%20l%C3%ADnea-brightgreen)](https://venezuela-api-two.vercel.app)
+[![Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?logo=vercel)](https://venezuela-api-two.vercel.app)
+[![Version](https://img.shields.io/badge/version-1.0.0-blue)](https://github.com/armandozabala/venezuela-api)
+[![License](https://img.shields.io/badge/license-ISC-green)](./LICENSE)
+[![Open Source](https://img.shields.io/badge/Open%20Source-%E2%9D%A4-red)](https://github.com/armandozabala/venezuela-api)
+
 🔗 **Base URL:** `https://venezuela-api-two.vercel.app`
 
 ---
