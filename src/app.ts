@@ -1,6 +1,8 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import { PrismaClient } from '@prisma/client';
+import fs from 'fs';
+import path from 'path';
 
 const app = Fastify({
   logger: true
@@ -12,60 +14,11 @@ app.register(cors, {
   origin: '*'
 });
 
-// Ruta raíz con documentación detallada
+// Ruta raíz — sirve la página HTML de documentación
 app.get('/', async (request, reply) => {
-  return {
-    name: 'Venezuela API',
-    version: '1.0.0',
-    description: 'API REST con información geográfica, política y turística de Venezuela 🇻🇪',
-    base_url: 'https://venezuela-api-two.vercel.app',
-    source_code: 'https://github.com/armandozabala/venezuela-api',
-    endpoints: [
-      {
-        method: 'GET',
-        path: '/health',
-        description: 'Verifica que la API esté en línea',
-        example_response: { status: 'ok', message: 'Venezuela API is running' },
-      },
-      {
-        method: 'GET',
-        path: '/api/states',
-        description: 'Retorna todos los estados de Venezuela con sus imágenes',
-        example_response: [
-          { id: 1, name: 'Amazonas', capital: 'Puerto Ayacucho', region: 'Sur', population: 180000 }
-        ],
-      },
-      {
-        method: 'GET',
-        path: '/api/states/:id',
-        description: 'Retorna un estado específico con sus ciudades, municipios e imágenes',
-        params: { id: 'ID numérico del estado (1-24)' },
-        example: '/api/states/1',
-      },
-      {
-        method: 'GET',
-        path: '/api/cities',
-        description: 'Retorna las primeras 50 ciudades con su estado relacionado',
-        example_response: [
-          { id: 1, name: 'Caracas', is_capital: true, state: { name: 'Distrito Capital' } }
-        ],
-      },
-      {
-        method: 'GET',
-        path: '/api/cities/:id',
-        description: 'Retorna una ciudad específica con su estado e imágenes',
-        params: { id: 'ID numérico de la ciudad' },
-        example: '/api/cities/1',
-      },
-      {
-        method: 'GET',
-        path: '/api/search',
-        description: 'Busca estados y ciudades por nombre',
-        query_params: { q: 'Texto a buscar (requerido)' },
-        example: '/api/search?q=Caracas',
-      },
-    ],
-  };
+  const htmlPath = path.join(__dirname, 'docs.html');
+  const html = fs.readFileSync(htmlPath, 'utf-8');
+  reply.type('text/html').send(html);
 });
 
 // Ruta básica para chequear salud

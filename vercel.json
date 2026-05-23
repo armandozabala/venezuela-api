@@ -3,7 +3,10 @@
   "builds": [
     {
       "src": "api/serverless.ts",
-      "use": "@vercel/node"
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": ["src/docs.html"]
+      }
     }
   ],
   "routes": [
