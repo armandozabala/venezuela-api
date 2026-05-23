@@ -225,6 +225,78 @@
     .cm  { color: var(--muted); }
     .num { color: #79c0ff; }
 
+    /* ── LIVE PLAYGROUND ── */
+    .playground-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px 12px 0 0;
+      padding: 12px 16px;
+      border-bottom: none;
+    }
+    .playground-bar select {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem;
+      padding: 8px 12px;
+      border-radius: 8px;
+      flex: 1;
+      outline: none;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    .playground-bar select:focus { border-color: var(--blue); }
+    .playground-bar button {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 8px 20px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: background 0.2s, transform 0.1s;
+      white-space: nowrap;
+    }
+    .playground-bar button:hover  { background: #388bfd; }
+    .playground-bar button:active { transform: scale(0.97); }
+    .playground-bar button.loading { opacity: 0.7; pointer-events: none; }
+
+    .response-box {
+      background: var(--bg-code);
+      border: 1px solid var(--border);
+      border-radius: 0 0 12px 12px;
+      padding: 20px 24px;
+      min-height: 120px;
+      max-height: 420px;
+      overflow-y: auto;
+      position: relative;
+    }
+    .response-box pre {
+      font-size: 0.82rem;
+      white-space: pre-wrap;
+      word-break: break-word;
+      color: var(--text);
+    }
+    .response-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+      font-size: 0.8rem;
+    }
+    .status-ok  { color: var(--green); font-weight: 600; }
+    .status-err { color: #f85149;      font-weight: 600; }
+    .time-badge { color: var(--muted); }
+    .placeholder-msg { color: var(--muted); font-size: 0.9rem; padding: 20px 0; text-align: center; }
+
     /* ── FOOTER ── */
     footer {
       text-align: center;
@@ -401,6 +473,34 @@ response = requests.<span class="fn">get</span>(
       </div>
     </section>
 
+    <!-- LIVE PLAYGROUND -->
+    <section>
+      <h2 class="section-title">⚡ Pruébalo en vivo</h2>
+      <p class="section-subtitle">Selecciona un endpoint y ejecuta una consulta real a la API ahora mismo.</p>
+
+      <div class="playground-bar">
+        <span class="method" style="flex-shrink:0">GET</span>
+        <select id="endpoint-select">
+          <option value="/api/states">/api/states — Todos los estados</option>
+          <option value="/api/states/1" selected>/api/states/1 — Estado: Amazonas</option>
+          <option value="/api/states/9">/api/states/9 — Estado: Distrito Capital</option>
+          <option value="/api/states/15">/api/states/15 — Estado: Miranda</option>
+          <option value="/api/cities">/api/cities — Primeras 50 ciudades</option>
+          <option value="/api/cities/1">/api/cities/1 — Ciudad: Maroa</option>
+          <option value="/api/search?q=Caracas">/api/search?q=Caracas — Buscar "Caracas"</option>
+          <option value="/api/search?q=Zulia">/api/search?q=Zulia — Buscar "Zulia"</option>
+          <option value="/health">/health — Estado de la API</option>
+        </select>
+        <button id="run-btn" onclick="runQuery()">
+          <span id="btn-icon">▶</span> Ejecutar
+        </button>
+      </div>
+
+      <div class="response-box" id="response-box">
+        <div class="placeholder-msg">👆 Selecciona un endpoint y haz clic en <strong>Ejecutar</strong> para ver la respuesta real.</div>
+      </div>
+    </section>
+
   </div>
 
   <!-- FOOTER -->
@@ -414,6 +514,59 @@ response = requests.<span class="fn">get</span>(
       document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
       event.target.classList.add('active');
       document.getElementById('tab-' + tabId).classList.add('active');
+    }
+
+    function syntaxHighlight(json) {
+      return json
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, match => {
+          if (/^"/.test(match)) {
+            if (/:$/.test(match)) return `<span style="color:#79c0ff">${match}</span>`;
+            return `<span style="color:#a5d6ff">${match}</span>`;
+          }
+          if (/true|false/.test(match)) return `<span style="color:#ff7b72">${match}</span>`;
+          if (/null/.test(match))        return `<span style="color:#8b949e">${match}</span>`;
+          return `<span style="color:#d2a8ff">${match}</span>`;
+        });
+    }
+
+    async function runQuery() {
+      const select  = document.getElementById('endpoint-select');
+      const box     = document.getElementById('response-box');
+      const btn     = document.getElementById('run-btn');
+      const icon    = document.getElementById('btn-icon');
+      const path    = select.value;
+      const baseUrl = 'https://venezuela-api-two.vercel.app';
+
+      btn.classList.add('loading');
+      icon.textContent = '⏳';
+      box.innerHTML = '<div class="placeholder-msg">Cargando...</div>';
+
+      const start = Date.now();
+      try {
+        const res  = await fetch(baseUrl + path);
+        const ms   = Date.now() - start;
+        const data = await res.json();
+        const pretty = JSON.stringify(data, null, 2);
+        const statusClass = res.ok ? 'status-ok' : 'status-err';
+        box.innerHTML = `
+          <div class="response-meta">
+            <span class="${statusClass}">● ${res.status} ${res.statusText}</span>
+            <span class="time-badge">⚡ ${ms}ms</span>
+            <span class="time-badge">${baseUrl}${path}</span>
+          </div>
+          <pre>${syntaxHighlight(pretty)}</pre>
+        `;
+      } catch (err) {
+        const ms = Date.now() - start;
+        box.innerHTML = `
+          <div class="response-meta"><span class="status-err">● Error de red</span><span class="time-badge">${ms}ms</span></div>
+          <pre style="color:#f85149">${err}</pre>
+        `;
+      } finally {
+        btn.classList.remove('loading');
+        icon.textContent = '▶';
+      }
     }
   </script>
 
