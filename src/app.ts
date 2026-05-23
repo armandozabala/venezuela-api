@@ -12,6 +12,24 @@ app.register(cors, {
   origin: '*'
 });
 
+// Ruta raíz de bienvenida
+app.get('/', async (request, reply) => {
+  return {
+    message: '🇻🇪 Bienvenido a la Venezuela API',
+    version: '1.0.0',
+    description: 'API con información geográfica, política y turística de Venezuela',
+    endpoints: {
+      health: 'GET /health',
+      states: 'GET /api/states',
+      state: 'GET /api/states/:id',
+      cities: 'GET /api/cities',
+      city: 'GET /api/cities/:id',
+      search: 'GET /api/search?q=texto',
+    },
+    docs: 'https://github.com/armandozabala/venezuela-api',
+  };
+});
+
 // Ruta básica para chequear salud
 app.get('/health', async (request, reply) => {
   return { status: 'ok', message: 'Venezuela API is running' };
