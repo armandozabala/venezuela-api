@@ -1,0 +1,113 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model State {
+  id             Int      @id @default(autoincrement())
+  name           String   @unique
+  capital        String
+  description    String?  @db.Text
+  cover_image_url String? @db.Text
+  
+  // Nuevos campos estilo API Colombia
+  surface        Float?   // En km2
+  population     Int?     // Población estimada
+  phone_prefix   String?  // Ej: 0212
+  region         String?  // Región Político-Administrativa
+  
+  cities         City[]
+  municipalities Municipality[]
+  images         LocationImage[]
+  tourist_attractions TouristAttraction[]
+  presidents     President[]
+  airports       Airport[]
+}
+
+model Municipality {
+  id        Int      @id @default(autoincrement())
+  name      String
+  state_id  Int
+  state     State    @relation(fields: [state_id], references: [id], onDelete: Cascade)
+  
+  parishes  Parish[]
+}
+
+model Parish {
+  id              Int          @id @default(autoincrement())
+  name            String
+  municipality_id Int
+  municipality    Municipality @relation(fields: [municipality_id], references: [id], onDelete: Cascade)
+}
+
+model City {
+  id          Int     @id @default(autoincrement())
+  name        String
+  state_id    Int
+  is_capital  Boolean @default(false)
+  state       State   @relation(fields: [state_id], references: [id], onDelete: Cascade)
+  
+  // Nuevos campos
+  description String? @db.Text
+  surface     Float?
+  population  Int?
+  postal_code String?
+  
+  images      LocationImage[]
+  airports    Airport[]
+  tourist_attractions TouristAttraction[]
+}
+
+model TouristAttraction {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?  @db.Text
+  images      String?  @db.Text // JSON list of URLs or single URL
+  
+  state_id    Int?
+  state       State?   @relation(fields: [state_id], references: [id], onDelete: SetNull)
+  city_id     Int?
+  city        City?    @relation(fields: [city_id], references: [id], onDelete: SetNull)
+}
+
+model Airport {
+  id          Int      @id @default(autoincrement())
+  name        String
+  iata_code   String?
+  icao_code   String?
+  
+  state_id    Int?
+  state       State?   @relation(fields: [state_id], references: [id], onDelete: SetNull)
+  city_id     Int?
+  city        City?    @relation(fields: [city_id], references: [id], onDelete: SetNull)
+}
+
+model President {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?  @db.Text
+  start_date  DateTime?
+  end_date    DateTime?
+  
+  // Estado donde nació
+  state_id    Int?
+  state       State?   @relation(fields: [state_id], references: [id], onDelete: SetNull)
+}
+
+model LocationImage {
+  id             Int     @id @default(autoincrement())
+  url            String  @db.Text
+  description    String?
+  author_credit  String?
+  location_type  String  // Ej: "State", "City"
+  
+  state_id       Int?
+  city_id        Int?
+  
+  state          State?  @relation(fields: [state_id], references: [id], onDelete: SetNull)
+  city           City?   @relation(fields: [city_id], references: [id], onDelete: SetNull)
+}
